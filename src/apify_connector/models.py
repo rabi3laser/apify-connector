@@ -57,6 +57,7 @@ class Rating:
     
     @property
     def is_guest_favorite_eligible(self) -> bool:
+        """Check if rating qualifies for Guest Favorite badge"""
         return self.overall >= 4.9
 
 
@@ -83,6 +84,7 @@ class CalendarDay:
     
     @property
     def is_blocked(self) -> bool:
+        """Blocked = not available (booked or manually blocked)"""
         return not self.available
 
 
@@ -95,6 +97,7 @@ class Calendar:
     
     @property
     def occupancy_rate(self) -> float:
+        """Calculate occupancy rate (blocked days / total days)"""
         if not self.days:
             return 0.0
         blocked = sum(1 for d in self.days if d.is_blocked)
@@ -102,29 +105,34 @@ class Calendar:
     
     @property
     def average_price(self) -> Optional[float]:
+        """Average price for available days"""
         prices = [d.price for d in self.days if d.price is not None]
         return sum(prices) / len(prices) if prices else None
     
     @property
     def price_range(self) -> tuple:
+        """Min and max price"""
         prices = [d.price for d in self.days if d.price is not None]
         if not prices:
             return None, None
         return min(prices), max(prices)
     
     def get_available_dates(self) -> List[date]:
+        """Get list of available dates"""
         return [d.date for d in self.days if d.available]
     
     def get_blocked_dates(self) -> List[date]:
+        """Get list of blocked dates"""
         return [d.date for d in self.days if d.is_blocked]
 
 
 @dataclass
 class ListingBasic:
-    """Basic listing info - from search results"""
+    """Basic listing info - from search results."""
     id: str
     name: str
     url: str
+    
     price_per_night: Optional[float] = None
     currency: str = "EUR"
     location: Optional[Location] = None
@@ -141,12 +149,13 @@ class ListingBasic:
     
     @property
     def airbnb_url(self) -> str:
+        """Full Airbnb URL"""
         return f"https://www.airbnb.com/rooms/{self.id}"
 
 
 @dataclass
 class ListingDetails(ListingBasic):
-    """Full listing details - from individual listing page"""
+    """Full listing details - from individual listing page."""
     description: Optional[str] = None
     space: Optional[str] = None
     neighborhood_overview: Optional[str] = None
@@ -164,18 +173,22 @@ class ListingDetails(ListingBasic):
     scraped_at: datetime = field(default_factory=datetime.utcnow)
     
     def has_amenity(self, amenity: str) -> bool:
+        """Check if listing has a specific amenity (case-insensitive)"""
         amenity_lower = amenity.lower()
         return any(amenity_lower in a.lower() for a in self.amenities)
     
     def get_amenities_by_category(self, category: str) -> List[str]:
+        """Get amenities for a specific category"""
         return self.amenities_by_category.get(category, [])
     
     @property
     def photo_count(self) -> int:
+        """Number of photos"""
         return len(self.images)
     
     @property
     def description_length(self) -> int:
+        """Description length in characters"""
         return len(self.description) if self.description else 0
 
 
@@ -190,16 +203,19 @@ class SearchResult:
     
     @property
     def average_price(self) -> Optional[float]:
+        """Average price in search results"""
         prices = [l.price_per_night for l in self.listings if l.price_per_night]
         return sum(prices) / len(prices) if prices else None
     
     @property
     def average_rating(self) -> Optional[float]:
+        """Average rating in search results"""
         ratings = [l.rating for l in self.listings if l.rating]
         return sum(ratings) / len(ratings) if ratings else None
     
     @property
     def superhost_percentage(self) -> float:
+        """Percentage of superhosts"""
         if not self.listings:
             return 0.0
         superhosts = sum(1 for l in self.listings if l.is_superhost)
